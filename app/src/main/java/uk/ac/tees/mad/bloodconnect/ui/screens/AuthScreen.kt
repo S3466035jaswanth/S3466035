@@ -25,11 +25,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import uk.ac.tees.mad.bloodconnect.Screen
 
 @Composable
-fun AuthScreen() {
+fun AuthScreen(navController: NavController) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
 
@@ -77,7 +79,12 @@ fun AuthScreen() {
         Button(
             onClick = {
                 if (isLoginMode) {
-                    loginUser(auth, email, password) { result ->
+                    loginUser(auth, email, password, onSuccess = { result ->
+                        Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
+                        navController.navigate(Screen.Profile.route) {
+                            popUpTo(0)
+                        }
+                    }) { result ->
                         message = result
                         Toast.makeText(context, result, Toast.LENGTH_SHORT).show()
                     }
@@ -125,16 +132,22 @@ fun signUpUser(auth: FirebaseAuth, email: String, password: String, callback: (S
 }
 
 // Function to Handle User Login
-fun loginUser(auth: FirebaseAuth, email: String, password: String, callback: (String) -> Unit) {
+fun loginUser(
+    auth: FirebaseAuth,
+    email: String,
+    password: String,
+    onSuccess: (String) -> Unit,
+    onFail: (String) -> Unit
+) {
     if (email.isBlank() || password.isBlank()) {
-        callback("Email and Password cannot be empty")
+        onFail("Email and Password cannot be empty")
         return
     }
     auth.signInWithEmailAndPassword(email, password)
         .addOnSuccessListener {
-            callback("Login Successful!")
+            onSuccess("Login Successful!")
         }
         .addOnFailureListener { e ->
-            callback("Login Failed: ${e.localizedMessage}")
+            onFail("Login Failed: ${e.localizedMessage}")
         }
 }
