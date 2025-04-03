@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import uk.ac.tees.mad.bloodconnect.ui.screens.AuthScreen
 import uk.ac.tees.mad.bloodconnect.ui.screens.ProfileScreen
 import uk.ac.tees.mad.bloodconnect.ui.screens.WelcomeScreen
@@ -17,8 +19,8 @@ sealed class Screen(val route: String) {
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-
-    NavHost(navController = navController, startDestination = Screen.Welcome.route) {
+    val isLoggedIn = Firebase.auth.currentUser != null
+    NavHost(navController = navController, startDestination = if (isLoggedIn) Screen.Profile.route else Screen.Welcome.route) {
         composable(Screen.Welcome.route) {
             WelcomeScreen(navController)
         }
