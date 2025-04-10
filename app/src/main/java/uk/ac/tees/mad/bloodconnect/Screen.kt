@@ -14,13 +14,17 @@ sealed class Screen(val route: String) {
     object Welcome : Screen("welcome_screen")
     object Auth : Screen("auth_screen")
     object Profile : Screen("profile_screen")
+    object RequestBlood : Screen("request_blood")
 }
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
     val isLoggedIn = Firebase.auth.currentUser != null
-    NavHost(navController = navController, startDestination = if (isLoggedIn) Screen.Profile.route else Screen.Welcome.route) {
+    NavHost(
+        navController = navController,
+        startDestination = if (isLoggedIn) Screen.Profile.route else Screen.Welcome.route
+    ) {
         composable(Screen.Welcome.route) {
             WelcomeScreen(navController)
         }
@@ -30,5 +34,6 @@ fun AppNavigation() {
         composable(Screen.Profile.route) {
             ProfileScreen()
         }
+
     }
 }
