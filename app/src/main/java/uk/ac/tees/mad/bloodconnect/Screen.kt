@@ -7,7 +7,9 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import uk.ac.tees.mad.bloodconnect.ui.screens.AuthScreen
+import uk.ac.tees.mad.bloodconnect.ui.screens.DonorScreen
 import uk.ac.tees.mad.bloodconnect.ui.screens.ProfileScreen
+import uk.ac.tees.mad.bloodconnect.ui.screens.RequestBloodScreen
 import uk.ac.tees.mad.bloodconnect.ui.screens.WelcomeScreen
 
 sealed class Screen(val route: String) {
@@ -15,6 +17,7 @@ sealed class Screen(val route: String) {
     object Auth : Screen("auth_screen")
     object Profile : Screen("profile_screen")
     object RequestBlood : Screen("request_blood")
+    object DonorScreen : Screen("donor")
 }
 
 @Composable
@@ -32,8 +35,15 @@ fun AppNavigation() {
             AuthScreen(navController)
         }
         composable(Screen.Profile.route) {
-            ProfileScreen()
+            ProfileScreen(navController)
         }
-
+        composable(Screen.DonorScreen.route) {
+            DonorScreen(navController)
+        }
+        composable(Screen.RequestBlood.route) {
+            RequestBloodScreen(navController)
+        }
     }
 }
+
+

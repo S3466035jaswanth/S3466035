@@ -28,12 +28,14 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.decodeBitmap
+import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import uk.ac.tees.mad.bloodconnect.Screen
 import java.io.ByteArrayOutputStream
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(navController: NavController) {
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
     val db = FirebaseFirestore.getInstance()
@@ -73,6 +75,10 @@ fun ProfileScreen() {
                         bloodType = TextFieldValue(document.getString("bloodType") ?: "")
                         contactInfo = TextFieldValue(document.getString("contactInfo") ?: "")
                         profileImageBase64 = document.getString("profileImage")
+
+                        if (name.text.isNotEmpty() && bloodType.text.isNotEmpty() && contactInfo.text.isNotEmpty()) {
+                            navController.navigate(Screen.DonorScreen.route)
+                        }
                     }
                     isLoading = false
                 }
