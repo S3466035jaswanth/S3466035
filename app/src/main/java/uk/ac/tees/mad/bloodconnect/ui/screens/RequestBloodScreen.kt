@@ -1,11 +1,17 @@
 package uk.ac.tees.mad.bloodconnect.ui.screens
 
+import android.graphics.Bitmap
 import android.location.Location
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -26,6 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -41,6 +49,18 @@ fun RequestBloodScreen(navController: NavController) {
     var unitsRequired by remember { mutableStateOf("") }
     var hospitalName by remember { mutableStateOf("") }
     var userLocation by remember { mutableStateOf<Location?>(null) }
+    var documentImage by remember { mutableStateOf<Bitmap?>(null) }
+    var encodedImage by remember { mutableStateOf<String?>(null) }
+
+    // Camera launcher to capture image
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            documentImage = bitmap
+            encodedImage = encodeImageToBase64(bitmap)
+        }
+    }
 
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
@@ -110,9 +130,30 @@ fun RequestBloodScreen(navController: NavController) {
                 Text("Your Location: ${it.latitude}, ${it.longitude}")
             } ?: Text("Fetching location...")
 
+            Spacer(modifier = Modifier.height(8.dp))
+            // Button to open camera
+            Button(onClick = { cameraLauncher.launch(null) }) {
+                Text("Capture Document")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Show captured image if available
+            documentImage?.let {
+                Image(
+                    bitmap = it.asImageBitmap(),
+                    contentDescription = "Captured Image",
+                    modifier = Modifier.size(200.dp),
+                    contentScale = ContentScale.FillWidth
+                )
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(onClick = { /* Submit Blood Request */ }) {
+            Button(
+                onClick = { /* Submit Blood Request */ },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Submit Request")
             }
         }
