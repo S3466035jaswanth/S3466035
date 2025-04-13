@@ -1,7 +1,9 @@
 package uk.ac.tees.mad.bloodconnect.ui.screens
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.location.Location
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -40,11 +42,15 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RequestBloodScreen(navController: NavController) {
     val context = LocalContext.current
+    val db = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
     var bloodGroup by remember { mutableStateOf("") }
     var unitsRequired by remember { mutableStateOf("") }
     var hospitalName by remember { mutableStateOf("") }
@@ -151,11 +157,83 @@ fun RequestBloodScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { /* Submit Blood Request */ },
+                onClick = {
+                    if (bloodGroup.isEmpty() || unitsRequired.isEmpty() || hospitalName.isEmpty() || documentImage == null || userLocation == null) {
+                        return@Button
+                    }
+                    submitBloodRequest(
+                        auth,
+                        db,
+                        bloodGroup,
+                        unitsRequired,
+                        hospitalName,
+                        encodedImage,
+                        userLocation!!,
+                        context
+                    ) {
+                        navController.navigateUp()
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Submit Request")
             }
         }
     }
+}
+
+
+private fun submitBloodRequest(
+    auth: FirebaseAuth,
+    db: FirebaseFirestore,
+    bloodGroup: String,
+    units: String,
+    hospital: String,
+    imageBase64: String?,
+    userLocation: Location,
+    context: Context,
+    onSuccess: () -> Unit
+) {
+    val userId = auth.currentUser?.uid
+    if (userId == null) {
+        Toast.makeText(context, "User not logged in!", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    db.collection("users").document(userId).get()
+        .addOnSuccessListener { snapshot ->
+            val name = snapshot.getString("name") ?: "Unknown"
+            val contactInfo = snapshot.getString("contactInfo") ?: "Not Available"
+
+            if (name == "Unknown" || contactInfo == "Not Available") {
+                Toast.makeText(context, "Please complete your profile details!", Toast.LENGTH_SHORT)
+                    .show()
+                return@addOnSuccessListener
+            }
+
+            val request = hashMapOf(
+                "bloodGroup" to bloodGroup,
+                "requesterName" to name,
+                "contact" to contactInfo,
+                "unitsRequired" to units,
+                "latitude" to userLocation.latitude,
+                "longitude" to userLocation.longitude,
+                "hospitalName" to hospital,
+                "documentImage" to imageBase64,
+                "timestamp" to System.currentTimeMillis()
+            )
+
+            db.collection("blood_requests")
+                .add(request)
+                .addOnSuccessListener {
+                    Toast.makeText(context, "Blood request submitted!", Toast.LENGTH_SHORT).show()
+                    onSuccess()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(context, "Failed to submit request", Toast.LENGTH_SHORT).show()
+                }
+        }
+        .addOnFailureListener {
+            Toast.makeText(context, "Error fetching user details!", Toast.LENGTH_SHORT).show()
+        }
 }

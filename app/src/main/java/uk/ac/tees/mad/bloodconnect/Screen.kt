@@ -7,7 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import uk.ac.tees.mad.bloodconnect.ui.screens.AuthScreen
-import uk.ac.tees.mad.bloodconnect.ui.screens.DonorScreen
+import uk.ac.tees.mad.bloodconnect.ui.screens.HomeScreen
 import uk.ac.tees.mad.bloodconnect.ui.screens.ProfileScreen
 import uk.ac.tees.mad.bloodconnect.ui.screens.RequestBloodScreen
 import uk.ac.tees.mad.bloodconnect.ui.screens.WelcomeScreen
@@ -38,7 +38,7 @@ fun AppNavigation() {
             ProfileScreen(navController)
         }
         composable(Screen.DonorScreen.route) {
-            DonorScreen(navController)
+            HomeScreen(navController)
         }
         composable(Screen.RequestBlood.route) {
             RequestBloodScreen(navController)

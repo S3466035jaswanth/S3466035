@@ -17,7 +17,7 @@ import uk.ac.tees.mad.bloodconnect.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DonorScreen(navController: NavController) {
+fun HomeScreen(navController: NavController) {
 
 
     Scaffold(
@@ -41,3 +41,4 @@ fun DonorScreen(navController: NavController) {
         }
     }
 }
+
