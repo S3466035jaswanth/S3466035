@@ -50,6 +50,7 @@ fun HomeScreen(navController: NavController) {
                 snapshot?.documents?.forEach { doc ->
                     val data = doc.data
                     val bloodRequest = BloodRequest(
+                        id = doc.id,
                         bloodGroup = data?.get("bloodGroup") as? String ?: "",
                         requesterName = data?.get("requesterName") as? String ?: "",
                         contact = data?.get("contact") as? String ?: "",
@@ -103,9 +104,11 @@ fun BloodRequestItem(request: BloodRequest, navController: NavController) {
             .padding(8.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(Modifier
-            .padding(16.dp)
-            .fillMaxWidth()) {
+        Column(
+            Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
             Text(
                 "Blood Group: ${request.bloodGroup}",
                 fontWeight = FontWeight.Bold,
@@ -115,7 +118,7 @@ fun BloodRequestItem(request: BloodRequest, navController: NavController) {
             Text("Units Required: ${request.unitsRequired}")
             Text("Hospital: ${request.hospitalName}")
             Button(
-                onClick = { navController.navigate("donorSearch/${request.latitude}/${request.longitude}/${request.bloodGroup}") },
+                onClick = { navController.navigate("request_details/${request.id}") },
                 modifier = Modifier.align(Alignment.End)
             ) {
                 Text("See details")
@@ -125,6 +128,7 @@ fun BloodRequestItem(request: BloodRequest, navController: NavController) {
 }
 
 data class BloodRequest(
+    val id: String,
     val bloodGroup: String = "",
     val requesterName: String = "",
     val contact: String = "",
