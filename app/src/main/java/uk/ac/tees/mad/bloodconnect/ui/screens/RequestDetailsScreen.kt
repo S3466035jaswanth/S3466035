@@ -45,47 +45,36 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.firebase.firestore.FirebaseFirestore
+import uk.ac.tees.mad.bloodconnect.BloodRequestViewModel
 import uk.ac.tees.mad.bloodconnect.NotificationHelper
+import uk.ac.tees.mad.bloodconnect.toDomain
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RequestDetailsScreen(requestId: String, navController: NavController) {
+fun RequestDetailsScreen(
+    requestId: String,
+    navController: NavController,
+    viewModel: BloodRequestViewModel = viewModel()
+) {
     val context = LocalContext.current
-
-    val db = FirebaseFirestore.getInstance()
     var requestDetails by remember { mutableStateOf<BloodRequest?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(requestId) {
-        db.collection("blood_requests").document(requestId).get()
-            .addOnSuccessListener { doc ->
-                val data = doc.data
-                requestDetails = BloodRequest(
-                    id = doc.id,
-                    bloodGroup = data?.get("bloodGroup") as? String ?: "",
-                    requesterName = data?.get("requesterName") as? String ?: "",
-                    contact = data?.get("contact") as? String ?: "",
-                    unitsRequired = data?.get("unitsRequired") as? String ?: "",
-                    latitude = (data?.get("latitude") as? Number)?.toDouble() ?: 0.0,
-                    longitude = (data?.get("longitude") as? Number)?.toDouble() ?: 0.0,
-                    hospitalName = data?.get("hospitalName") as? String ?: "",
-                    documentImage = data?.get("documentImage") as? String,
-                    timestamp = (data?.get("timestamp") as? Number)?.toLong() ?: 0L
-                )
-
-                // Show Notification when new request
-                NotificationHelper.showNotification(
-                    context,
-                    "Urgent Blood Request",
-                    "${requestDetails?.bloodGroup} needed at ${requestDetails?.hospitalName}"
-                )
-                isLoading = false
-            }
-            .addOnFailureListener {
-                isLoading = false
-            }
+        try {
+            requestDetails = viewModel.getBloodRequest(requestId)?.toDomain()
+            isLoading = false
+        } catch (ex: Exception) {
+            isLoading = false
+        }
+        // Show Notification when new request
+        NotificationHelper.showNotification(
+            context,
+            "Urgent Blood Request",
+            "${requestDetails?.bloodGroup} needed at ${requestDetails?.hospitalName}"
+        )
     }
 
     Scaffold(

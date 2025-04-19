@@ -1,6 +1,5 @@
 package uk.ac.tees.mad.bloodconnect.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,66 +19,34 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.google.firebase.firestore.FirebaseFirestore
+import uk.ac.tees.mad.bloodconnect.BloodRequestViewModel
 import uk.ac.tees.mad.bloodconnect.Screen
+import uk.ac.tees.mad.bloodconnect.toDomain
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
-    val db = FirebaseFirestore.getInstance()
-    val bloodRequests = remember { mutableStateListOf<BloodRequest>() }
-
-    // Fetch Blood Requests in Real-time
-    LaunchedEffect(Unit) {
-        db.collection("blood_requests")
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    Log.e("Firestore", "Error fetching requests", e)
-                    return@addSnapshotListener
-                }
-                bloodRequests.clear()
-                snapshot?.documents?.forEach { doc ->
-                    val data = doc.data
-                    val bloodRequest = BloodRequest(
-                        id = doc.id,
-                        bloodGroup = data?.get("bloodGroup") as? String ?: "",
-                        requesterName = data?.get("requesterName") as? String ?: "",
-                        contact = data?.get("contact") as? String ?: "",
-                        unitsRequired = data?.get("unitsRequired") as? String ?: "",
-                        latitude = (data?.get("latitude") as? Number)?.toDouble() ?: 0.0,
-                        longitude = (data?.get("longitude") as? Number)?.toDouble() ?: 0.0,
-                        hospitalName = data?.get("hospitalName") as? String ?: "",
-                        documentImage = data?.get("documentImage") as? String,
-                        timestamp = (data?.get("timestamp") as? Number)?.toLong() ?: 0L
-                    )
-                    bloodRequests.add(bloodRequest)
-                }
-            }
-    }
+fun HomeScreen(navController: NavController, viewModel: BloodRequestViewModel = viewModel()) {
+    val bloodRequests by viewModel.bloodRequests.collectAsState(emptyList())
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {
-                    navController.navigate(Screen.RequestBlood.route)
-                }
+                onClick = { navController.navigate(Screen.RequestBlood.route) }
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add")
             }
         },
         topBar = {
-            TopAppBar(
-                title = { Text("BloodConnect") }
-            )
+            TopAppBar(title = { Text("BloodConnect") })
         }
     ) { paddingValues ->
         LazyColumn(
@@ -89,7 +56,7 @@ fun HomeScreen(navController: NavController) {
             contentPadding = PaddingValues(16.dp)
         ) {
             items(bloodRequests) { request ->
-                BloodRequestItem(request, navController)
+                BloodRequestItem(request.toDomain(), navController)
             }
         }
     }
