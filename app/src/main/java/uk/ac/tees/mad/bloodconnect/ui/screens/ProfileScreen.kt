@@ -76,8 +76,11 @@ fun ProfileScreen(navController: NavController) {
                         contactInfo = TextFieldValue(document.getString("contactInfo") ?: "")
                         profileImageBase64 = document.getString("profileImage")
 
-                        if (name.text.isNotEmpty() && bloodType.text.isNotEmpty() && contactInfo.text.isNotEmpty()) {
-                            navController.navigate(Screen.DonorScreen.route)
+                        if (navController.previousBackStackEntry?.destination?.route != Screen.DonorScreen.route) {
+
+                            if (name.text.isNotEmpty() && bloodType.text.isNotEmpty() && contactInfo.text.isNotEmpty()) {
+                                navController.navigate(Screen.DonorScreen.route)
+                            }
                         }
                     }
                     isLoading = false
